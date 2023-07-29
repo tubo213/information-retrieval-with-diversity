@@ -1,0 +1,8 @@
+top_k: 8
+max_display_per_col: 8
+model_dir: "data/models/item2vec/"
+index_path: { type: concat, x: "@/model_dir", y: "faiss.index" }
+customer2vec_path: { type: concat, x: "@/model_dir", y: "customer2vec.pkl" }
+recommenders:
+  - { type: GreedyRecommender, index_path: "@/index_path" }
+  - { type: MMRRecommender, index_path: "@/index_path" }

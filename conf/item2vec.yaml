@@ -1,0 +1,6 @@
+model_params:
+  vector_size: 100
+  window: 5
+  min_count: 1
+  workers: 24
+  epochs: 50
