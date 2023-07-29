@@ -151,7 +151,7 @@ def main():
         mf_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True
     )
     model = MatrixFactorization(len(customer_ids), len(article_ids), embedding_dim)
-    trainer = Trainer(accelerator="gpu", max_epochs=epochs)
+    trainer = Trainer(accelerator="gpu", max_epochs=epochs, output_dir=output_dir)
     trainer.fit(model, mf_dataloader)
 
     article_embedding = get_article_embedding(model, encoded_article_ids)
