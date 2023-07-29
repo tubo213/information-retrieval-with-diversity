@@ -11,7 +11,7 @@ class MMRRecommender(BaseRecommender):
         self.lam = lam
 
     def recommend(self, query_vec: np.ndarray, top_k: int = 10) -> np.ndarray:
-        indices, embeddings = self._retrieval(query_vec, top_k)
+        indices, embeddings = self._retrieval(query_vec)
 
         # MMR
         num_items = embeddings.shape[0]

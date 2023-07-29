@@ -44,7 +44,7 @@ class BaseRecommender:
 
         st.write("No parameters to set.")
 
-    def _retrieval(self, query_vec: np.ndarray, top_k: int) -> np.ndarray:
+    def _retrieval(self, query_vec: np.ndarray) -> np.ndarray:
         _, indices, embeddings = self.index.search_and_reconstruct(query_vec, self.num_candidates)
         indices = indices.squeeze()
         embeddings = embeddings.squeeze()
