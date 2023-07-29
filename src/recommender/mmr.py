@@ -1,4 +1,3 @@
-import faiss
 import numpy as np
 import streamlit as st
 
@@ -8,14 +7,11 @@ from src.utils import cosine_similarity_matrix
 
 class MMRRecommender(BaseRecommender):
     def __init__(self, index_path: str, lam: float = 0.5, num_candidates: int = 100):
-        self.index = faiss.read_index(index_path)
+        super().__init__(index_path, num_candidates)
         self.lam = lam
-        self.num_candidates = num_candidates
 
     def recommend(self, query_vec: np.ndarray, top_k: int = 10) -> np.ndarray:
-        _, indices, embeddings = self.index.search_and_reconstruct(query_vec, self.num_candidates)
-        indices = indices.squeeze()
-        embeddings = embeddings.squeeze()
+        indices, embeddings = self._retrieval(query_vec, top_k)
 
         # MMR
         num_items = embeddings.shape[0]
