@@ -5,6 +5,8 @@
 ```bash
 rye run streamlit run app.py
 ```
+[streamlit-app-2023-07-30-03-07-42.webm](https://github.com/tubo213/information-retrieval-with-diversity/assets/74698040/b5812f81-f584-4087-85cf-b7cc62c3c5cc)
+
 
 
 
