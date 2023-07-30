@@ -106,7 +106,7 @@ class Renderer:
             .T
         )
         article_meta.columns = [""]
-        st.table(article_meta)
+        st.dataframe(article_meta, use_container_width=True)
 
     def _get_img(self, article_id: int) -> Image:
         img_id = str(article_id).zfill(10)
