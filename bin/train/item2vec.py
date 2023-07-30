@@ -30,7 +30,6 @@ def main():
     # construct faiss index
     emb_dim = model.wv.vector_size
     article_vecs = {article_id: model.wv[article_id] for article_id in article_ids}
-
     index = faiss.IndexIDMap2(faiss.IndexFlatIP(emb_dim))
     vecs = np.array(list(article_vecs.values()))
     index.add_with_ids(vecs, article_ids)

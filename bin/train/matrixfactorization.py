@@ -73,6 +73,7 @@ class MatrixFactorization(LightningModule):
         super().__init__()
         self.customer_embedding = nn.Embedding(num_customer, embedding_dim)
         self.article_embedding = nn.Embedding(num_article, embedding_dim)
+        self.criteria = nn.BCEWithLogitsLoss()
 
     def forward(self, customer_id: torch.Tensor, article_id: torch.Tensor):
         customer_embedding = self.customer_embedding(customer_id)
@@ -84,7 +85,7 @@ class MatrixFactorization(LightningModule):
     def training_step(self, batch, batch_idx):
         customer_id, article_id, label = batch
         sim = self(customer_id, article_id)
-        loss = nn.BCEWithLogitsLoss()(sim, label)
+        loss = self.criteria(sim, label)
 
         self.log("train_loss", loss, on_epoch=True, prog_bar=True)
 
@@ -101,11 +102,13 @@ class MatrixFactorization(LightningModule):
 
 
 @torch.no_grad()
-def get_article_embedding(model: MatrixFactorization, article_ids: np.ndarray):
+def get_article_embedding(
+    model: MatrixFactorization, article_ids: np.ndarray, batch_size: int = 1024 * 15
+):
     model = model.eval()
     article_ds = EmbeddingDataset(article_ids)
     article_dl = DataLoader(
-        article_ds, batch_size=1024 * 15, shuffle=False, num_workers=24, pin_memory=True
+        article_ds, batch_size=batch_size, shuffle=False, num_workers=24, pin_memory=True
     )
 
     article_embedding = []
@@ -116,11 +119,13 @@ def get_article_embedding(model: MatrixFactorization, article_ids: np.ndarray):
 
 
 @torch.no_grad()
-def get_user_embedding(model: MatrixFactorization, customer_ids: np.ndarray):
+def get_user_embedding(
+    model: MatrixFactorization, customer_ids: np.ndarray, batch_size: int = 1024 * 15
+):
     model = model.eval()
     customer_ds = EmbeddingDataset(customer_ids)
     customer_dl = DataLoader(
-        customer_ds, batch_size=1024 * 15, shuffle=False, num_workers=24, pin_memory=True
+        customer_ds, batch_size=batch_size, shuffle=False, num_workers=24, pin_memory=True
     )
 
     customer_embedding = []
@@ -151,11 +156,11 @@ def main():
         mf_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True
     )
     model = MatrixFactorization(len(customer_ids), len(article_ids), embedding_dim)
-    trainer = Trainer(accelerator="gpu", max_epochs=epochs, output_dir=output_dir)
+    trainer = Trainer(accelerator="gpu", max_epochs=epochs, default_root_dir=output_dir)
     trainer.fit(model, mf_dataloader)
 
-    article_embedding = get_article_embedding(model, encoded_article_ids)
-    customer_embedding = get_user_embedding(model, encoded_customer_ids)
+    article_embedding = get_article_embedding(model, encoded_article_ids, batch_size=batch_size)
+    customer_embedding = get_user_embedding(model, encoded_customer_ids, batch_size=batch_size)
 
     # construct faiss index
     index = faiss.IndexIDMap2(faiss.IndexFlatIP(embedding_dim))
