@@ -165,7 +165,7 @@ def main():
 
     # Query Itemを初期化
     if "article_id" not in st.session_state:
-        init_article_id(np.random.random.choice(article_ids))
+        init_article_id(np.random.choice(article_ids))
 
     # ランダムにQueryを選択
     article_id = select_random_article(article_ids)
