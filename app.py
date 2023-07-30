@@ -4,11 +4,12 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 import numpy as np
+import polars as pl
 import streamlit as st
 from PIL import Image, ImageDraw
 from pytorch_pfn_extras.config import Config
 
-from const import CONF_DIR, PROCESSED_DATA_DIR
+from const import CONF_DIR, PROCESSED_DATA_DIR, RAW_DATA_DIR
 from src.recommender import BaseRecommender
 from src.type import types
 from src.utils import load_config, load_json, load_pickle
@@ -24,10 +25,11 @@ def load_model(_config: Config) -> Tuple[List[BaseRecommender], Dict[str, np.nda
 
 @st.cache_data
 def load_metadata():
+    transaction_df = pl.scan_csv(RAW_DATA_DIR / "transactions_train.csv")
     article_id2name = load_json(PROCESSED_DATA_DIR / "article_id2name.json")
     customer_ids = np.load(PROCESSED_DATA_DIR / "customer_ids.npy", allow_pickle=True)
 
-    return article_id2name, customer_ids
+    return transaction_df, article_id2name, customer_ids
 
 
 def init_customer_id(customer_id):
@@ -88,6 +90,25 @@ class Renderer:
         return img
 
 
+def display_rescent_articles(
+    customer_id: str,
+    transaction_df: pl.LazyFrame,
+    renderer: Renderer,
+    num_articles: int = 7,
+):
+    recent_articles = (
+        transaction_df.filter(pl.col("customer_id") == customer_id)[:num_articles]
+        .select("article_id")
+        .collect()
+        .to_numpy()
+        .tolist()
+    )
+    col = st.columns(num_articles)
+    for i, article_id in enumerate(recent_articles):
+        with col[i]:
+            renderer.render(article_id[0])
+
+
 def display_recommended_items(
     customer_vec: np.ndarray,
     recommender: BaseRecommender,
@@ -124,7 +145,7 @@ def main():
     st.set_page_config(page_title="Recommender", page_icon="📦", layout="wide")
     with st.spinner("Loading model..."):
         recommenders, customer2vec = load_model(config)
-        article_id2name, customer_ids = load_metadata()
+        transaction_df, article_id2name, customer_ids = load_metadata()
         renderer = Renderer(article_id2name, Path("data/raw/images"))
 
     st.title("H&M Recommender")
@@ -134,6 +155,10 @@ def main():
         init_customer_id(customer_ids[0])
     # ランダムに顧客を選択
     customer_id = select_random_customer(customer_ids)
+
+    # 顧客の最近購入した商品を表示
+    st.markdown("## Items recently purchased by the customer")
+    display_rescent_articles(customer_id, transaction_df, renderer, num_articles=config["top_k"])
 
     # customer idからembeddingを取得
     customer_vec = customer2vec[customer_id][None, :]
