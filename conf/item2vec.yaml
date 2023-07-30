@@ -1,6 +1,6 @@
 model_params:
-  vector_size: 100
+  vector_size: 128
   window: 5
   min_count: 1
   workers: 24
-  epochs: 50
+  epochs: 100
