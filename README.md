@@ -21,7 +21,7 @@ rye run python bin/prepare_data.py
 
 3. train
 
-```
+```bash
 rye run python bin/train/item2vec.py
 ```
 
